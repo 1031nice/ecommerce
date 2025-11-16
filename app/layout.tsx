@@ -1,0 +1,67 @@
+import "./globals.css";
+import type { Metadata } from "next";
+import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Clothery",
+  description: "A minimal apparel storefront built with Next.js app router."
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="ko">
+      <body>
+        <nav className="navbar">
+          <div className="navbar-inner container">
+            <Link href="/" className="brand">
+              <span className="brand-badge" />
+              Clothery
+            </Link>
+            <div className="nav-links">
+              <Link href="/login" className="nav-btn">로그인</Link>
+            </div>
+          </div>
+        </nav>
+        <main className="container">{children}</main>
+        <footer className="footer">
+          <div className="container footer-inner">
+            <div className="footer-brand">
+              <span className="brand-badge" />
+              <div>
+                <div className="footer-title">Clothery Co.</div>
+                <div className="footer-muted">Demo E-commerce for Apparel</div>
+              </div>
+            </div>
+            <div className="footer-grid">
+              <div>
+                <div className="footer-section-title">회사 정보</div>
+                <div className="footer-muted">대표: 홍길동</div>
+                <div className="footer-muted">사업자등록번호: 123-45-67890</div>
+                <div className="footer-muted">통신판매업: 제2025-서울강남-00000호</div>
+              </div>
+              <div>
+                <div className="footer-section-title">고객센터</div>
+                <div className="footer-muted">운영시간: 평일 10:00 ~ 18:00</div>
+                <div className="footer-muted">이메일: support@clothery.demo</div>
+                <div className="footer-muted">전화: 02-1234-5678</div>
+              </div>
+              <div>
+                <div className="footer-section-title">주소</div>
+                <div className="footer-muted">서울특별시 강남구 어디로 123, 5층</div>
+                <div className="footer-muted">우) 06234</div>
+              </div>
+            </div>
+            <div className="footer-bottom">
+              <div className="footer-muted">© {new Date().getFullYear()} Clothery Co. All rights reserved.</div>
+              <div className="footer-links">
+                <Link href="#" className="footer-link">이용약관</Link>
+                <Link href="#" className="footer-link">개인정보처리방침</Link>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </body>
+    </html>
+  );
+}
+
