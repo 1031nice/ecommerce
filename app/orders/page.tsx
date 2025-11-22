@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ORDERS } from "@lib/data";
 import { OrderStatus } from "@lib/types";
@@ -83,101 +84,89 @@ export default function OrdersPage() {
       {filtered.length === 0 ? (
         <div className="panel">조건에 맞는 주문이 없습니다.</div>
       ) : (
-        <div style={{ display: "grid", gap: 16 }}>
+        <div style={{ display: "grid", gap: 12 }}>
           {filtered.map((order) => (
-            <div key={order.id} className="panel">
-              <div style={{ display: "grid", gap: 16 }}>
-                {/* 헤더 */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: "1.125rem", marginBottom: 4 }}>
-                      {order.orderNumber}
-                    </div>
-                    <div style={{ color: "var(--muted)", fontSize: "0.9375rem" }}>
-                      {formatDate(order.createdAt)}
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      padding: "6px 12px",
-                      borderRadius: "8px",
-                      background: statusColors[order.status] + "15",
-                      color: statusColors[order.status],
-                      fontWeight: 600,
-                      fontSize: "0.9375rem",
-                    }}
-                  >
-                    {order.status}
-                  </div>
-                </div>
+            <Link
+              key={order.id}
+              href={`/orders/${order.id}`}
+              className="panel"
+              style={{
+                display: "block",
+                textDecoration: "none",
+                color: "inherit",
+                transition: "transform 0.1s ease, border-color 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.borderColor = "#94a3b8";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.borderColor = "var(--border)";
+              }}
+            >
+              <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                {/* 상품 썸네일 */}
+                <img
+                  src={order.product.thumbnailUrl}
+                  alt={order.product.title}
+                  style={{
+                    width: 80,
+                    height: 80,
+                    objectFit: "cover",
+                    borderRadius: "10px",
+                    border: "1px solid var(--border)",
+                    flexShrink: 0,
+                  }}
+                />
 
-                {/* 상품 정보 */}
-                <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-                  <img
-                    src={order.product.thumbnailUrl}
-                    alt={order.product.title}
-                    style={{
-                      width: 80,
-                      height: 80,
-                      objectFit: "cover",
-                      borderRadius: "10px",
-                      border: "1px solid var(--border)",
-                    }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 8 }}>{order.product.title}</div>
-                    <div style={{ color: "var(--muted)", fontSize: "0.9375rem", marginBottom: 4 }}>
-                      단가: {formatPrice(order.product.price)} × {order.quantity}개
+                {/* 주문 정보 */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 8 }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: "1.125rem", marginBottom: 4 }}>
+                        {order.orderNumber}
+                      </div>
+                      <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--text)" }}>
+                        {order.product.title}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: "8px",
+                        background: statusColors[order.status] + "15",
+                        color: statusColors[order.status],
+                        fontWeight: 600,
+                        fontSize: "0.9375rem",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {order.status}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 16, flexWrap: "wrap", color: "var(--muted)", fontSize: "0.9375rem" }}>
+                    <div>
+                      <span style={{ fontWeight: 600 }}>판매자:</span> {order.seller.name}
+                    </div>
+                    <div>
+                      <span style={{ fontWeight: 600 }}>구매자:</span> {order.buyer.name}
+                    </div>
+                    <div>
+                      <span style={{ fontWeight: 600 }}>수량:</span> {order.quantity}개
                     </div>
                     <div style={{ fontWeight: 600, color: "var(--brand)" }}>
-                      총액: {formatPrice(order.totalPrice)}
+                      {formatPrice(order.totalPrice)}
                     </div>
+                  </div>
+
+                  <div style={{ color: "var(--muted)", fontSize: "0.9375rem", marginTop: 4 }}>
+                    {formatDate(order.createdAt)}
                   </div>
                 </div>
-
-                {/* 판매자/구매자 정보 */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-                  <div>
-                    <div style={{ fontWeight: 600, marginBottom: 8, color: "var(--muted)", fontSize: "0.9375rem" }}>
-                      판매자
-                    </div>
-                    <div style={{ fontWeight: 600, marginBottom: 4 }}>{order.seller.name}</div>
-                    <div style={{ color: "var(--muted)", fontSize: "0.9375rem" }}>{order.seller.email}</div>
-                    <div style={{ color: "var(--muted)", fontSize: "0.9375rem" }}>{order.seller.phone}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 600, marginBottom: 8, color: "var(--muted)", fontSize: "0.9375rem" }}>
-                      구매자
-                    </div>
-                    <div style={{ fontWeight: 600, marginBottom: 4 }}>{order.buyer.name}</div>
-                    <div style={{ color: "var(--muted)", fontSize: "0.9375rem" }}>{order.buyer.email}</div>
-                    <div style={{ color: "var(--muted)", fontSize: "0.9375rem" }}>{order.buyer.phone}</div>
-                  </div>
-                </div>
-
-                {/* 배송지 및 메모 */}
-                {(order.deliveryAddress || order.notes) && (
-                  <div style={{ paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-                    {order.deliveryAddress && (
-                      <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--muted)", fontSize: "0.9375rem" }}>
-                          배송지
-                        </div>
-                        <div>{order.deliveryAddress}</div>
-                      </div>
-                    )}
-                    {order.notes && (
-                      <div>
-                        <div style={{ fontWeight: 600, marginBottom: 4, color: "var(--muted)", fontSize: "0.9375rem" }}>
-                          요청사항
-                        </div>
-                        <div>{order.notes}</div>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
