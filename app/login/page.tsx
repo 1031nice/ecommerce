@@ -40,7 +40,15 @@ export default function LoginPage() {
           <button className="btn primary" type="submit">로그인</button>
         </div>
       </form>
-      <div style={{ marginTop: 12 }}>
+      <div style={{ marginTop: 12, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+        <Link href="/login/find-id" className="btn">
+          아이디 찾기
+        </Link>
+        <Link href="/login/reset-password" className="btn">
+          비밀번호 재설정
+        </Link>
+      </div>
+      <div style={{ marginTop: 12, textAlign: "center" }}>
         계정이 없으신가요? <Link className="btn" href="/register">회원가입</Link>
       </div>
     </div>
