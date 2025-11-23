@@ -30,6 +30,7 @@ export default function Navigation() {
           </div>
         </div>
         <div className="nav-links">
+          <Link href="/products/new" className="nav-btn">상품 등록</Link>
           <Link href="/login" className="nav-btn">로그인</Link>
         </div>
       </div>
