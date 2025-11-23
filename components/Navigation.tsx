@@ -23,9 +23,15 @@ export default function Navigation() {
             </Link>
             <Link
               href="/orders"
-              className={`nav-tab ${pathname === "/orders" ? "active" : ""}`}
+              className={`nav-tab ${pathname === "/orders" || pathname?.startsWith("/orders/") ? "active" : ""}`}
             >
               주문 목록
+            </Link>
+            <Link
+              href="/admin/registrations"
+              className={`nav-tab ${pathname?.startsWith("/admin/registrations") ? "active" : ""}`}
+            >
+              회원 관리
             </Link>
           </div>
         </div>

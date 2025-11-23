@@ -41,3 +41,20 @@ export interface Order {
   notes?: string;
 }
 
+export type RegistrationStatus = "대기중" | "승인" | "반려";
+
+export interface RegistrationRequest {
+  id: string;
+  email: string;
+  phone: string;
+  businessLicenseImage: string; // 이미지 URL
+  bankStatementImage: string; // 이미지 URL
+  createdAt: string;
+  status: RegistrationStatus;
+  // 운영자가 입력하는 정보
+  businessNumber?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  notes?: string; // 운영자 메모
+}
+

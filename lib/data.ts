@@ -1,4 +1,4 @@
-import { Product, Category, Order } from "./types";
+import { Product, Category, Order, RegistrationRequest } from "./types";
 
 export const CATEGORIES: Category[] = ["상의", "하의", "아우터", "원피스", "신발", "액세서리"];
 
@@ -204,5 +204,62 @@ export function getProductBySlug(slug: string): Product | undefined {
 
 export function getOrderById(id: string): Order | undefined {
   return ORDERS.find((o) => o.id === id);
+}
+
+// 회원가입 신청 더미 데이터
+export const REGISTRATION_REQUESTS: RegistrationRequest[] = [
+  {
+    id: "reg-1",
+    email: "company1@example.com",
+    phone: "01012345678",
+    businessLicenseImage: "https://picsum.photos/seed/business-license-1/800/600",
+    bankStatementImage: "https://picsum.photos/seed/bank-statement-1/800/600",
+    createdAt: "2024-01-15T10:30:00Z",
+    status: "대기중",
+  },
+  {
+    id: "reg-2",
+    email: "company2@example.com",
+    phone: "01023456789",
+    businessLicenseImage: "https://picsum.photos/seed/business-license-2/800/600",
+    bankStatementImage: "https://picsum.photos/seed/bank-statement-2/800/600",
+    createdAt: "2024-01-16T14:20:00Z",
+    status: "대기중",
+  },
+  {
+    id: "reg-3",
+    email: "company3@example.com",
+    phone: "01034567890",
+    businessLicenseImage: "https://picsum.photos/seed/business-license-3/800/600",
+    bankStatementImage: "https://picsum.photos/seed/bank-statement-3/800/600",
+    createdAt: "2024-01-17T09:15:00Z",
+    status: "대기중",
+  },
+  {
+    id: "reg-4",
+    email: "company4@example.com",
+    phone: "01045678901",
+    businessLicenseImage: "https://picsum.photos/seed/business-license-4/800/600",
+    bankStatementImage: "https://picsum.photos/seed/bank-statement-5/800/600",
+    createdAt: "2024-01-10T11:00:00Z",
+    status: "승인",
+    businessNumber: "1234567890",
+    bankName: "KB국민은행",
+    bankAccountNumber: "110123456789",
+  },
+  {
+    id: "reg-5",
+    email: "company5@example.com",
+    phone: "01056789012",
+    businessLicenseImage: "https://picsum.photos/seed/business-license-5/800/600",
+    bankStatementImage: "https://picsum.photos/seed/bank-statement-5/800/600",
+    createdAt: "2024-01-12T16:45:00Z",
+    status: "반려",
+    notes: "사업자등록증 이미지가 불명확함",
+  },
+];
+
+export function getRegistrationRequestById(id: string): RegistrationRequest | undefined {
+  return REGISTRATION_REQUESTS.find((req) => req.id === id);
 }
 
