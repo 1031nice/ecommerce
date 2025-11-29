@@ -5,7 +5,8 @@ import Navigation from "@components/Navigation";
 
 export const metadata: Metadata = {
   title: "Clothery",
-  description: "A minimal apparel storefront built with Next.js app router."
+  description: "A minimal apparel storefront built with Next.js app router.",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=5"
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -9,7 +9,7 @@ export default function Navigation() {
   return (
     <nav className="navbar">
       <div className="navbar-inner container">
-        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+        <div className="navbar-brand-group">
           <Link href="/" className="brand">
             <span className="brand-badge" />
             Clothery
