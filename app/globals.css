@@ -894,8 +894,8 @@ a {
   align-items: center;
   justify-content: space-around;
   max-width: 100%;
-  padding: 6px 16px;
-  gap: 8px;
+  padding: 9px 24px; /* 6px 16px * 1.5 */
+  gap: 12px; /* 8px * 1.5 */
 }
 
 .bottom-nav-item {
@@ -904,7 +904,7 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4px 12px;
+  padding: 6px 18px; /* 4px 12px * 1.5 */
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -912,8 +912,13 @@ a {
   text-decoration: none;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  gap: 2px;
+  gap: 3px; /* 2px * 1.5 */
   position: relative;
+  /* 모바일 터치 이벤트 개선 */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .bottom-nav-item:active {
@@ -938,8 +943,8 @@ a {
 }
 
 .bottom-nav-icon {
-  width: 14px;
-  height: 14px;
+  width: 21px; /* 14px * 1.5 */
+  height: 21px; /* 14px * 1.5 */
   stroke-width: 2;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -950,7 +955,7 @@ a {
 }
 
 .bottom-nav-label {
-  font-size: 0.6rem;
+  font-size: 0.9rem; /* 0.6rem * 1.5 */
   font-weight: 600;
   text-align: center;
   letter-spacing: -0.01em;

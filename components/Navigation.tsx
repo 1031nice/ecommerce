@@ -57,7 +57,12 @@ export default function Navigation() {
       <nav className="bottom-nav mobile-only">
         <div className="bottom-nav-inner">
           <button
-            onClick={() => setIsAdminMode(!isAdminMode)}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsAdminMode(!isAdminMode);
+            }}
             className={`bottom-nav-item ${isAdminMode ? "active" : ""}`}
           >
             <svg className="bottom-nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
