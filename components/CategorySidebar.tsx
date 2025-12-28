@@ -37,7 +37,7 @@ export default function CategorySidebar({ selected = "전체", onSelect, mobileO
   };
 
   const MobileDropdown = () => (
-    <div className="category-dropdown-wrapper" ref={dropdownRef}>
+    <div className="category-dropdown-wrapper mobile-only" ref={dropdownRef}>
       <button
         className="category-dropdown-button"
         onClick={() => setIsOpen(!isOpen)}
@@ -90,9 +90,6 @@ export default function CategorySidebar({ selected = "전체", onSelect, mobileO
           })}
         </div>
       </aside>
-
-      {/* 모바일 드롭다운 버튼 (layout 안에 렌더링) */}
-      <MobileDropdown />
     </>
   );
 }

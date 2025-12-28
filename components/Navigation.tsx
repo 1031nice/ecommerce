@@ -2,45 +2,90 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAdminMode } from "@/contexts/AdminModeContext";
 
 export default function Navigation() {
   const pathname = usePathname();
+  const { isAdminMode, setIsAdminMode } = useAdminMode();
 
   return (
-    <nav className="navbar">
-      <div className="navbar-inner container">
-        <div className="navbar-brand-group">
-          <Link href="/" className="brand">
-            <span className="brand-badge" />
-            Clothery
-          </Link>
-          <div className="nav-tabs">
-            <Link
-              href="/"
-              className={`nav-tab ${pathname === "/" ? "active" : ""}`}
-            >
-              상품 목록
+    <>
+      <nav className="navbar">
+        <div className="navbar-inner container">
+          <div className="navbar-brand-group">
+            <Link href="/" className="brand">
+              <span className="brand-badge" />
+              Clothery
             </Link>
-            <Link
-              href="/orders"
-              className={`nav-tab ${pathname === "/orders" || pathname?.startsWith("/orders/") ? "active" : ""}`}
+            <div className="nav-tabs">
+              {isAdminMode && (
+                <>
+                  <Link
+                    href="/"
+                    className={`nav-tab ${pathname === "/" ? "active" : ""}`}
+                  >
+                    상품 목록
+                  </Link>
+                  <Link
+                    href="/orders"
+                    className={`nav-tab ${pathname === "/orders" || pathname?.startsWith("/orders/") ? "active" : ""}`}
+                  >
+                    주문 목록
+                  </Link>
+                  <Link
+                    href="/admin/registrations"
+                    className={`nav-tab ${pathname?.startsWith("/admin/registrations") ? "active" : ""}`}
+                  >
+                    회원 관리
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="nav-links desktop-only">
+            <button
+              onClick={() => setIsAdminMode(!isAdminMode)}
+              className="nav-btn"
+              style={{ marginRight: "8px" }}
             >
-              주문 목록
-            </Link>
-            <Link
-              href="/admin/registrations"
-              className={`nav-tab ${pathname?.startsWith("/admin/registrations") ? "active" : ""}`}
-            >
-              회원 관리
-            </Link>
+              {isAdminMode ? "운영자 모드" : "사용자 모드"}
+            </button>
+            <Link href="/login" className="nav-btn">로그인</Link>
           </div>
         </div>
-        <div className="nav-links">
-          <Link href="/products/new" className="nav-btn">상품 등록</Link>
-          <Link href="/login" className="nav-btn">로그인</Link>
+      </nav>
+      <nav className="bottom-nav mobile-only">
+        <div className="bottom-nav-inner">
+          <button
+            onClick={() => setIsAdminMode(!isAdminMode)}
+            className={`bottom-nav-item ${isAdminMode ? "active" : ""}`}
+          >
+            <svg className="bottom-nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {isAdminMode ? (
+                <>
+                  <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </>
+              ) : (
+                <>
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </>
+              )}
+            </svg>
+            <div className="bottom-nav-label">{isAdminMode ? "운영자" : "사용자"}</div>
+          </button>
+          <Link href="/login" className="bottom-nav-item">
+            <svg className="bottom-nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <polyline points="10 17 15 12 10 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <line x1="15" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <div className="bottom-nav-label">로그인</div>
+          </Link>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </>
   );
 }
-

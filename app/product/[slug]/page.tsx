@@ -27,9 +27,6 @@ export default function ProductDetailPage({ params }: PageProps) {
           {product.price.toLocaleString()}원
         </div>
         <button className="btn primary" onClick={() => setOpen(true)}>구매하기</button>
-        <div style={{ marginTop: 16, color: "var(--muted)" }}>
-          여러 장의 이미지를 좌측 갤러리에서 확인할 수 있어요.
-        </div>
       </div>
 
       <Modal open={open} onClose={() => setOpen(false)} title="구매 정보 입력">

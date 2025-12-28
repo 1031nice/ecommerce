@@ -207,9 +207,25 @@ a {
 }
 @media (max-width: 640px) {
   .nav-links {
-    width: 100%;
-    justify-content: space-between;
-    gap: 8px;
+    display: none;
+  }
+}
+
+.desktop-only {
+  display: block;
+}
+@media (max-width: 640px) {
+  .desktop-only {
+    display: none;
+  }
+}
+
+.mobile-only {
+  display: none;
+}
+@media (max-width: 640px) {
+  .mobile-only {
+    display: block;
   }
 }
 
@@ -244,10 +260,14 @@ a {
   gap: 24px;
 }
 
-.sidebar {
+.sidebar-wrapper {
   position: sticky;
   top: 72px;
-  height: calc(100vh - 96px);
+  height: fit-content;
+  max-height: calc(100vh - 96px);
+}
+
+.sidebar {
   padding: 16px;
   border: 1px solid var(--border);
   background: linear-gradient(180deg, var(--panel), var(--panel-2));
@@ -556,7 +576,7 @@ a {
     gap: 16px;
   }
   .grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
 }
@@ -602,15 +622,28 @@ a {
   gap: 8px;
   margin-top: 8px;
 }
+.card-actions .btn {
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .card-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .card-actions .btn {
+    width: 100%;
+  }
+}
 .btn {
-  padding: 12px 16px;
+  padding: 14.4px 19.2px; /* 12px 16px * 1.2 */
   border-radius: 10px;
   border: 1px solid #94a3b8;
   background: #ffffff;
   color: var(--text);
   cursor: pointer;
-  font-size: 1rem;
-  min-height: 44px;
+  font-size: 1.2rem; /* 1rem * 1.2 */
+  min-height: 52.8px; /* 44px * 1.2 */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -618,11 +651,19 @@ a {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
 }
+/* 데스크탑에서 버튼 높이 줄이기 */
+@media (min-width: 641px) {
+  .btn {
+    padding: 10px 16px; /* 데스크탑에서는 원래 크기 */
+    font-size: 1rem;
+    min-height: 40px;
+  }
+}
 @media (max-width: 640px) {
   .btn {
-    padding: 10px 14px;
-    font-size: 0.9rem;
-    min-height: 40px;
+    padding: 12px 16.8px; /* 10px 14px * 1.2 */
+    font-size: 1.08rem; /* 0.9rem * 1.2 */
+    min-height: 48px; /* 40px * 1.2 */
   }
 }
 .btn:hover { background: #eef2f7; border-color: #94a3b8; transform: translateY(-1px); }
@@ -677,6 +718,19 @@ a {
   gap: 8px;
   overflow-x: auto;
   padding-bottom: 4px;
+  justify-content: start;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.thumbs::-webkit-scrollbar {
+  height: 4px;
+}
+.thumbs::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thumbs::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
 }
 .thumb {
   width: 72px;
@@ -685,7 +739,14 @@ a {
   border: 1px solid var(--border);
   object-fit: cover;
   cursor: pointer;
+  scroll-snap-align: start;
+  flex-shrink: 0;
 }
+.hero-container {
+  position: relative;
+  width: 100%;
+}
+
 .hero {
   width: 100%;
   aspect-ratio: 4/3;
@@ -693,6 +754,20 @@ a {
   object-fit: cover;
   border: 1px solid var(--border);
   background: #f3f4f6;
+  display: block;
+}
+
+.image-indicator {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
 }
 
 .modal-backdrop {
@@ -798,9 +873,147 @@ a {
   border: 1px solid var(--border);
   background: #ffffff;
 }
+
+/* 하단 네비게이션 바 (모바일 전용) */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  backdrop-filter: saturate(180%) blur(20px);
+  background: rgba(255, 255, 255, 0.85);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.08);
+  /* PWA: safe-area 처리 */
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.bottom-nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  max-width: 100%;
+  padding: 6px 16px;
+  gap: 8px;
+}
+
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 2px;
+  position: relative;
+}
+
+.bottom-nav-item:active {
+  transform: scale(0.95);
+}
+
+.bottom-nav-item.active {
+  background: linear-gradient(135deg, rgba(79, 140, 255, 0.12), rgba(79, 140, 255, 0.08));
+  color: var(--brand);
+  border-color: var(--brand);
+}
+
+.bottom-nav-item.active::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand), #7aa7ff);
+  border-radius: 16px 16px 0 0;
+}
+
+.bottom-nav-icon {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bottom-nav-item.active .bottom-nav-icon {
+  transform: scale(1.1);
+  filter: drop-shadow(0 2px 4px rgba(79, 140, 255, 0.3));
+}
+
+.bottom-nav-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: -0.01em;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  line-height: 1.1;
+}
+
+.bottom-nav-item.active .bottom-nav-label {
+  font-weight: 700;
+  color: var(--brand);
+}
+
+/* Floating Action Button (모바일 전용) */
+.fab {
+  display: none; /* 기본적으로 숨김 */
+}
+@media (max-width: 640px) {
+  .fab {
+    display: flex; /* 모바일에서만 표시 */
+    position: fixed;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0) + 16px);
+    right: 16px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand), #7aa7ff);
+    color: white;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(79, 140, 255, 0.4);
+    z-index: 40;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+  }
+}
+
+.fab:active {
+  transform: scale(0.95);
+  box-shadow: 0 4px 12px rgba(79, 140, 255, 0.3);
+}
+
+.fab svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  stroke-width: 2.5;
+}
+
+/* 하단 네비게이션 바가 있을 때 main 컨텐츠 하단 여백 추가 */
+@media (max-width: 640px) {
+  main.container {
+    padding-bottom: calc(40px + env(safe-area-inset-bottom, 0) + 24px);
+  }
+  
+  /* footer도 하단 메뉴바 위에 위치하도록 */
+  footer.footer {
+    margin-bottom: calc(40px + env(safe-area-inset-bottom, 0));
+  }
+}
+
 .form-grid {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 .form-grid input {
   width: 100%;
@@ -833,16 +1046,18 @@ a {
 }
 .form-actions {
   display: flex;
-  gap: 8px;
+  gap: 20px; /* 8px에서 20px로 증가 (실수 방지) */
   justify-content: flex-end;
+  margin-top: 8px;
 }
 @media (max-width: 640px) {
   .form-actions {
-    flex-direction: column-reverse;
-    gap: 8px;
+    flex-direction: row;
+    gap: 20px; /* 8px에서 20px로 증가 */
+    justify-content: flex-end;
   }
   .form-actions .btn {
-    width: 100%;
+    width: auto;
   }
 }
 
