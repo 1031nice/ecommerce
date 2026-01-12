@@ -1,12 +1,23 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { createClient } from '@supabase/supabase-js'
+import axios from 'axios'
+
+// Supabase Client Setup
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabase = (supabaseUrl && supabaseKey) 
+  ? createClient(supabaseUrl, supabaseKey) 
+  : null
+
+const API_BASE_URL = 'http://localhost:8080' // Dev environment
 
 // 상태 관리
 const form = ref({
-  id: '',
+  id: '', // Used as Email
   password: '',
   passwordConfirm: '',
-  email: '',
+  email: '', // Optional secondary email? Or same?
   businessNumber: '',
   phoneNumber: '',
   verificationCode: '',
@@ -19,6 +30,42 @@ const isPhoneVerified = ref(false)
 const isSameAddress = ref(false)
 const loading = ref(false)
 const errorMsg = ref('')
+
+// 유효성 검사 규칙
+const validation = ref({
+  id: {
+    valid: true,
+    msg: ''
+  },
+  password: {
+    valid: true,
+    msg: ''
+  }
+})
+
+// 아이디 유효성 검사 (4~20자, 영문 소문자, 숫자, _, -)
+const validateId = () => {
+  const idRegex = /^[a-z0-9_-]{4,20}$/
+  if (!form.value.id) {
+    validation.value.id = { valid: false, msg: '아이디를 입력해주세요.' }
+  } else if (!idRegex.test(form.value.id)) {
+    validation.value.id = { valid: false, msg: '4~20자의 영문 소문자, 숫자, 특수문자(_, -)만 사용 가능합니다.' }
+  } else {
+    validation.value.id = { valid: true, msg: '' }
+  }
+}
+
+// 비밀번호 유효성 검사 (8~20자, 영문+숫자 조합)
+const validatePassword = () => {
+  const pwdRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,20}$/
+  if (!form.value.password) {
+    validation.value.password = { valid: false, msg: '비밀번호를 입력해주세요.' }
+  } else if (!pwdRegex.test(form.value.password)) {
+    validation.value.password = { valid: false, msg: '8~20자의 영문과 숫자를 조합하여 입력해주세요.' }
+  } else {
+    validation.value.password = { valid: true, msg: '' }
+  }
+}
 
 // 비밀번호 일치 확인
 const isPasswordMismatch = ref(false)
@@ -61,9 +108,13 @@ const verifyCode = () => {
 }
 
 const handleRegister = async () => {
+  // 실시간 검증 실행
+  validateId()
+  validatePassword()
+
   // 유효성 검사
-  if (!form.value.id || !form.value.password) {
-    errorMsg.value = '아이디와 비밀번호는 필수입니다.'
+  if (!validation.value.id.valid || !validation.value.password.valid) {
+    errorMsg.value = '입력 정보를 확인해주세요.'
     return
   }
   if (isPasswordMismatch.value) {
@@ -74,17 +125,62 @@ const handleRegister = async () => {
     errorMsg.value = '휴대폰 인증을 완료해주세요.'
     return
   }
+  if (!supabase) {
+    errorMsg.value = '시스템 설정 오류: Supabase 클라이언트가 초기화되지 않았습니다.'
+    return
+  }
 
   loading.value = true
   errorMsg.value = ''
 
-  // TODO: 실제 백엔드/Supabase 연동 시, ID를 이메일 형식으로 변환하거나 별도 로직 필요
-  // 현재는 UI 동작 확인용 더미 처리
-  setTimeout(() => {
-    alert('회원가입 요청이 완료되었습니다.\n(현재는 UI 데모입니다)')
+  try {
+            // 1. Supabase Auth Signup
+            // ID를 기반으로 가상 이메일 생성하여 가입 (@korea-logis.local)
+            const virtualEmail = `${form.value.id}@korea-logis.local`
+            
+            const { data, error } = await supabase.auth.signUp({
+              email: virtualEmail, 
+              password: form.value.password,
+              options: {
+                data: {
+                  username: form.value.id,
+                  phone: form.value.phoneNumber,
+                  real_email: form.value.email // 실제 연락용 이메일
+                }
+              }
+            })
+    if (error) {
+      throw error
+    }
+
+    if (data.user) {
+      // 2. Backend Registration Request
+      // 주소 정보를 notes에 병합
+      const notes = `[Address Info] Business: ${form.value.businessAddress || 'N/A'}, Yard: ${form.value.yardAddress || 'N/A'}`
+
+      await axios.post(`${API_BASE_URL}/api/register`, {
+        username: form.value.id,
+        password: form.value.password,
+        email: form.value.email || '', // Optional real email
+        phone: form.value.phoneNumber,
+        businessNumber: form.value.businessNumber,
+        businessLicenseImage: null, // TODO: File upload implementation
+        bankStatementImage: null,
+        bankName: null,
+        bankAccountNumber: null,
+        notes: notes
+      })
+
+      alert('회원가입 요청이 완료되었습니다.\n이메일 인증을 확인해주세요.')
+      window.location.href = '/login'
+    }
+
+  } catch (e: any) {
+    console.error(e)
+    errorMsg.value = e.message || '회원가입 처리 중 오류가 발생했습니다.'
+  } finally {
     loading.value = false
-    window.location.href = '/login'
-  }, 1000)
+  }
 }
 </script>
 
@@ -117,13 +213,33 @@ const handleRegister = async () => {
             <!-- 아이디 -->
             <div>
               <label for="id" class="block text-sm font-medium text-gray-700">아이디 <span class="text-red-500">*</span></label>
-              <input id="id" v-model="form.id" type="text" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="아이디를 입력하세요">
+              <input 
+                id="id" 
+                v-model="form.id" 
+                @blur="validateId"
+                type="text" 
+                required 
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                :class="{'border-red-500': !validation.id.valid}"
+                placeholder="4~20자 영문 소문자, 숫자, _, -"
+              >
+              <p v-if="!validation.id.valid" class="mt-1 text-xs text-red-600">{{ validation.id.msg }}</p>
             </div>
 
             <!-- 비밀번호 -->
             <div>
               <label for="password" class="block text-sm font-medium text-gray-700">비밀번호 <span class="text-red-500">*</span></label>
-              <input id="password" v-model="form.password" type="password" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="비밀번호">
+              <input 
+                id="password" 
+                v-model="form.password" 
+                @blur="validatePassword"
+                type="password" 
+                required 
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                :class="{'border-red-500': !validation.password.valid}"
+                placeholder="8~20자 영문+숫자 조합"
+              >
+              <p v-if="!validation.password.valid" class="mt-1 text-xs text-red-600">{{ validation.password.msg }}</p>
             </div>
 
             <!-- 비밀번호 확인 -->
