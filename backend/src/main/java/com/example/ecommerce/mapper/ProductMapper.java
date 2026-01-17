@@ -16,16 +16,17 @@ public class ProductMapper {
                 .name(product.getName())
                 .price(product.getPrice())
                 .stockQuantity(product.getStockQuantity())
+                .minOrderQuantity(product.getMinOrderQuantity())
                 .grade(product.getGrade())
                 .itemName(product.getItemName())
                 .spec(product.getSpec())
                 .imageUrls(product.getImageUrls())
                 .thumbnailUrl(product.getThumbnailUrl())
                 .description(product.getDescription())
+                .isActive(product.getIsActive())
                 .build();
     }
     
-    // categoryName 없는 버전 (기본)
     public ProductDTO toDTO(Product product) {
         return toDTO(product, null);
     }
@@ -39,12 +40,14 @@ public class ProductMapper {
                 .name(dto.getName())
                 .price(dto.getPrice())
                 .stockQuantity(dto.getStockQuantity())
+                .minOrderQuantity(dto.getMinOrderQuantity())
                 .grade(dto.getGrade())
                 .itemName(dto.getItemName())
                 .spec(dto.getSpec())
                 .imageUrls(dto.getImageUrls())
                 .thumbnailUrl(dto.getThumbnailUrl())
                 .description(dto.getDescription())
+                .isActive(dto.getIsActive() != null ? dto.getIsActive() : true)
                 .build();
     }
 }

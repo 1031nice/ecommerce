@@ -20,7 +20,7 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(nullable = false) // 논리적 Unique
+    @Column(nullable = false)
     private String username;
 
     @Column(nullable = false)
@@ -48,8 +48,20 @@ public class Member {
 
     @Column(name = "yard_address")
     private String yardAddress;
+    
+    // 상태 관리
+    @Column(name = "is_active")
+    @Builder.Default
+    private Boolean isActive = true;
+    
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
 
     @Column(name = "created_at")
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+    
+    @Column(name = "updated_at")
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }

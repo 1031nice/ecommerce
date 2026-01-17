@@ -16,11 +16,12 @@ import java.util.UUID;
 public class ProductDTO {
     private UUID id;
     private UUID categoryId;
-    private String categoryName; // 추가된 필드
+    private String categoryName;
     
     private String name;
     private BigDecimal price;
     private Integer stockQuantity;
+    private Integer minOrderQuantity; // 추가
     
     private String grade;
     private String itemName;
@@ -29,4 +30,6 @@ public class ProductDTO {
     private List<String> imageUrls;
     private String thumbnailUrl;
     private String description;
+    
+    private Boolean isActive; // 추가
 }

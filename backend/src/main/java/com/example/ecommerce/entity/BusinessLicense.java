@@ -21,16 +21,30 @@ public class BusinessLicense {
     private UUID id;
 
     @Column(name = "member_id", nullable = false)
-    private UUID memberId; // 논리적 연결 (FK 없음)
+    private UUID memberId;
 
     @Column(name = "file_url", nullable = false)
     private String fileUrl;
+    
+    @Column(name = "file_name")
+    private String fileName;
 
     @Column(nullable = false)
     @Builder.Default
-    private String status = "PENDING"; // PENDING, APPROVED, REJECTED
+    private String status = "PENDING";
+
+    // 승인 정보
+    @Column(name = "approved_by")
+    private UUID approvedBy;
+    
+    @Column(name = "rejection_reason")
+    private String rejectionReason;
 
     @Column(name = "created_at")
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+    
+    @Column(name = "updated_at")
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }

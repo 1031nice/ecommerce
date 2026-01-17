@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -39,15 +40,36 @@ public class Order {
     @Column(nullable = false)
     private Integer quantity;
 
+    // 가격 정보
+    @Column(name = "unit_price", nullable = false)
+    private BigDecimal unitPrice;
+    
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice;
 
-    @Column(name = "delivery_address")
+    // 배송 정보
+    @Column(name = "delivery_address", nullable = false)
     private String deliveryAddress;
+    
+    @Column(name = "recipient_name")
+    private String recipientName;
+    
+    @Column(name = "recipient_phone")
+    private String recipientPhone;
 
     private String notes;
+    
+    @Column(name = "admin_notes")
+    private String adminNotes;
+    
+    @Column(name = "requested_delivery_date")
+    private LocalDate requestedDeliveryDate;
 
     @Column(name = "created_at")
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+    
+    @Column(name = "updated_at")
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }

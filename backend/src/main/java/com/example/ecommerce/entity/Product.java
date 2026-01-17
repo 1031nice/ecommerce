@@ -23,7 +23,7 @@ public class Product {
     private UUID id;
 
     @Column(name = "category_id", nullable = false)
-    private UUID categoryId; // 논리적 연결
+    private UUID categoryId;
 
     @Column(nullable = false)
     private String name;
@@ -35,15 +35,15 @@ public class Product {
     @Builder.Default
     private Integer stockQuantity = 0;
 
-    // 상품 속성 (필터링용)
+    // 상품 속성
     @Column(nullable = false)
-    private String grade; // 상태 (신재, 고재 등)
+    private String grade;
 
     @Column(name = "item_name", nullable = false)
-    private String itemName; // 품목 (파이프 등)
+    private String itemName;
 
     @Column(nullable = false)
-    private String spec; // 규격 (6m 등)
+    private String spec;
 
     @Column(name = "image_urls", columnDefinition = "text[]")
     private List<String> imageUrls;
@@ -52,8 +52,21 @@ public class Product {
     private String thumbnailUrl;
 
     private String description;
+    
+    // 관리
+    @Column(name = "is_active")
+    @Builder.Default
+    private Boolean isActive = true;
+    
+    @Column(name = "min_order_quantity")
+    @Builder.Default
+    private Integer minOrderQuantity = 1;
 
     @Column(name = "created_at")
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+    
+    @Column(name = "updated_at")
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }
