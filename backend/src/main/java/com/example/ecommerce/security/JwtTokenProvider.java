@@ -1,8 +1,6 @@
 package com.example.ecommerce.security;
 
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,14 +37,12 @@ public class JwtTokenProvider {
     }
 
     public String createToken(String username, String role) {
-        Claims claims = Jwts.claims().subject(username).build();
-        claims.put("role", role);
-
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
 
         return Jwts.builder()
-                .claims(claims)
+                .subject(username)
+                .claim("role", role)
                 .issuedAt(now)
                 .expiration(validity)
                 .signWith(secretKey)

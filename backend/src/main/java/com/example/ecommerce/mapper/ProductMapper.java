@@ -2,52 +2,20 @@ package com.example.ecommerce.mapper;
 
 import com.example.ecommerce.dto.ProductDTO;
 import com.example.ecommerce.entity.Product;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
-@Component
-public class ProductMapper {
-    public ProductDTO toDTO(Product product, String categoryName) {
-        if (product == null) return null;
-        
-        return ProductDTO.builder()
-                .id(product.getId())
-                .categoryId(product.getCategoryId())
-                .categoryName(categoryName)
-                .name(product.getName())
-                .price(product.getPrice())
-                .stockQuantity(product.getStockQuantity())
-                .minOrderQuantity(product.getMinOrderQuantity())
-                .grade(product.getGrade())
-                .itemName(product.getItemName())
-                .spec(product.getSpec())
-                .imageUrls(product.getImageUrls())
-                .thumbnailUrl(product.getThumbnailUrl())
-                .description(product.getDescription())
-                .isActive(product.getIsActive())
-                .build();
-    }
-    
-    public ProductDTO toDTO(Product product) {
-        return toDTO(product, null);
-    }
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface ProductMapper {
 
-    public Product toEntity(ProductDTO dto) {
-        if (dto == null) return null;
+    // categoryName을 포함하는 매핑
+    @Mapping(target = "categoryName", source = "categoryName")
+    ProductDTO map(Product product, String categoryName);
 
-        return Product.builder()
-                .id(dto.getId())
-                .categoryId(dto.getCategoryId())
-                .name(dto.getName())
-                .price(dto.getPrice())
-                .stockQuantity(dto.getStockQuantity())
-                .minOrderQuantity(dto.getMinOrderQuantity())
-                .grade(dto.getGrade())
-                .itemName(dto.getItemName())
-                .spec(dto.getSpec())
-                .imageUrls(dto.getImageUrls())
-                .thumbnailUrl(dto.getThumbnailUrl())
-                .description(dto.getDescription())
-                .isActive(dto.getIsActive() != null ? dto.getIsActive() : true)
-                .build();
-    }
+    // 기본 매핑 (categoryName은 null 처리됨)
+    ProductDTO map(Product product);
+
+    // Entity로 변환 (categoryName은 Entity에 없으므로 무시됨)
+    Product map(ProductDTO dto);
 }

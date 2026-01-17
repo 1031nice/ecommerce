@@ -1,6 +1,5 @@
 package com.example.ecommerce.service;
 
-import com.example.ecommerce.controller.AuthController;
 import com.example.ecommerce.dto.MemberDTO;
 import com.example.ecommerce.entity.Member;
 import com.example.ecommerce.mapper.MemberMapper;
@@ -9,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.example.ecommerce.controller.AuthController;
 
 @Service
 @RequiredArgsConstructor
@@ -26,9 +27,8 @@ public class AuthService {
         Member member = Member.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .phone(request.getPhone()) // 필수
+                .phone(request.getPhone())
                 .role("USER")
-                // 선택 정보
                 .companyName(request.getCompanyName())
                 .email(request.getEmail())
                 .businessNumber(request.getBusinessNumber())
@@ -37,6 +37,6 @@ public class AuthService {
                 .build();
 
         Member savedMember = memberRepository.save(member);
-        return memberMapper.toDTO(savedMember);
+        return memberMapper.map(savedMember); // toDTO -> map
     }
 }

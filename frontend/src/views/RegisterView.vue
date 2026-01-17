@@ -1,28 +1,21 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { createClient } from '@supabase/supabase-js'
 import axios from 'axios'
-
-// Supabase Client Setup
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-const supabase = (supabaseUrl && supabaseKey) 
-  ? createClient(supabaseUrl, supabaseKey) 
-  : null
 
 const API_BASE_URL = 'http://localhost:8080' // Dev environment
 
 // 상태 관리
 const form = ref({
-  id: '', // Used as Email
+  id: '', // username
   password: '',
   passwordConfirm: '',
-  email: '', // Optional secondary email? Or same?
+  email: '',
   businessNumber: '',
   phoneNumber: '',
   verificationCode: '',
   businessAddress: '',
-  yardAddress: ''
+  yardAddress: '',
+  companyName: '' // 회사명 추가
 })
 
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -57,7 +50,7 @@ const validateId = () => {
 
 // 비밀번호 유효성 검사 (8~20자, 영문+숫자 조합)
 const validatePassword = () => {
-  const pwdRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,20}$/
+  const pwdRegex = /^(?=.*[A-Za-z])(?=.*V)(?=.*V)[A-Za-zV@$!%*#?&]{8,20}$/
   if (!form.value.password) {
     validation.value.password = { valid: false, msg: '비밀번호를 입력해주세요.' }
   } else if (!pwdRegex.test(form.value.password)) {
@@ -125,59 +118,33 @@ const handleRegister = async () => {
     errorMsg.value = '휴대폰 인증을 완료해주세요.'
     return
   }
-  if (!supabase) {
-    errorMsg.value = '시스템 설정 오류: Supabase 클라이언트가 초기화되지 않았습니다.'
-    return
-  }
-
+  
   loading.value = true
   errorMsg.value = ''
 
   try {
-            // 1. Supabase Auth Signup
-            // ID를 기반으로 가상 이메일 생성하여 가입 (@korea-logis.local)
-            const virtualEmail = `${form.value.id}@korea-logis.local`
-            
-            const { data, error } = await supabase.auth.signUp({
-              email: virtualEmail, 
-              password: form.value.password,
-              options: {
-                data: {
-                  username: form.value.id,
-                  phone: form.value.phoneNumber,
-                  real_email: form.value.email // 실제 연락용 이메일
-                }
-              }
-            })
-    if (error) {
-      throw error
-    }
-
-    if (data.user) {
-      // 2. Backend Registration Request
-      // 주소 정보를 notes에 병합
-      const notes = `[Address Info] Business: ${form.value.businessAddress || 'N/A'}, Yard: ${form.value.yardAddress || 'N/A'}`
-
-      await axios.post(`${API_BASE_URL}/api/register`, {
+      // API 호출 (Spring Boot)
+      await axios.post(`${API_BASE_URL}/api/auth/register`, {
         username: form.value.id,
         password: form.value.password,
-        email: form.value.email || '', // Optional real email
         phone: form.value.phoneNumber,
-        businessNumber: form.value.businessNumber,
-        businessLicenseImage: null, // TODO: File upload implementation
-        bankStatementImage: null,
-        bankName: null,
-        bankAccountNumber: null,
-        notes: notes
+        companyName: form.value.companyName,
+        email: form.value.email || null,
+        businessNumber: form.value.businessNumber || null,
+        businessAddress: form.value.businessAddress || null,
+        yardAddress: form.value.yardAddress || null
       })
 
-      alert('회원가입 요청이 완료되었습니다.\n이메일 인증을 확인해주세요.')
+      alert('회원가입이 완료되었습니다.\n로그인 페이지로 이동합니다.')
       window.location.href = '/login'
-    }
 
   } catch (e: any) {
     console.error(e)
-    errorMsg.value = e.message || '회원가입 처리 중 오류가 발생했습니다.'
+    if (e.response && e.response.data && e.response.data.message) {
+        errorMsg.value = e.response.data.message
+    } else {
+        errorMsg.value = '회원가입 처리 중 오류가 발생했습니다.'
+    }
   } finally {
     loading.value = false
   }
@@ -248,6 +215,12 @@ const handleRegister = async () => {
               <input id="passwordConfirm" v-model="form.passwordConfirm" type="password" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="비밀번호를 다시 입력하세요">
               <p v-if="isPasswordMismatch" class="mt-1 text-sm text-red-600">비밀번호가 일치하지 않습니다.</p>
             </div>
+
+            <!-- 회사명 (추가) -->
+            <div>
+              <label for="companyName" class="block text-sm font-medium text-gray-700">회사명</label>
+              <input id="companyName" v-model="form.companyName" type="text" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="회사명 입력">
+            </div>
           </div>
 
           <!-- 연락처 정보 섹션 -->
@@ -298,7 +271,8 @@ const handleRegister = async () => {
             <!-- 사업자 등록증 파일 -->
             <div>
               <label class="block text-sm font-medium text-gray-700">사업자 등록증 사본</label>
-              <input ref="fileInput" type="file" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+              <p class="text-xs text-gray-500 mb-1">가입 후 마이페이지에서 등록 가능합니다.</p>
+              <input ref="fileInput" type="file" disabled class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-400 cursor-not-allowed">
             </div>
           </div>
 

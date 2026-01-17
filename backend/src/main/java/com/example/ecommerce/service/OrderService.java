@@ -18,7 +18,6 @@ public class OrderService {
     private final OrderMapper orderMapper;
 
     public List<OrderDTO> getMyOrders(UUID userId) {
-        // Assuming buyer orders for now
-        return orderMapper.toDTOs(orderRepository.findByBuyerId(userId));
+        return orderMapper.map(orderRepository.findByBuyerId(userId)); // toDTOs -> map
     }
 }

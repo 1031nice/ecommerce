@@ -1,12 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { createClient } from '@supabase/supabase-js'
+import axios from 'axios'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-const supabase = (supabaseUrl && supabaseKey) 
-  ? createClient(supabaseUrl, supabaseKey) 
-  : null
+const API_BASE_URL = 'http://localhost:8080' // Dev environment
 
 const id = ref('')
 const password = ref('')
@@ -24,28 +20,36 @@ const isResetCodeSent = ref(false)
 const tempPassword = ref('')
 
 const handleLogin = async () => {
-    if (!supabase) {
-        alert('Supabase 설정이 필요합니다.')
-        return
-    }
-
     loading.value = true
     errorMsg.value = ''
 
-    // TODO: ID를 이메일로 변환하거나, Username으로 로그인하는 로직 필요
-    // 현재는 ID 필드 값을 그대로 Email 자리에 넣어 시도합니다.
-    const { error } = await supabase.auth.signInWithPassword({
-        email: id.value,
-        password: password.value,
-    })
-    
-    loading.value = false
+    try {
+        const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
+            username: id.value,
+            password: password.value
+        })
 
-    if (error) {
-        errorMsg.value = '로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.'
-        console.error(error.message)
-    } else {
+        const { token, username, role } = response.data
+
+        // 토큰 및 사용자 정보 저장
+        localStorage.setItem('token', token)
+        localStorage.setItem('username', username)
+        localStorage.setItem('role', role)
+
+        // axios 헤더 설정 (전역 설정이 있다면 거기서 처리하겠지만, 일단 여기서도 간단히)
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+
         window.location.href = '/'
+
+    } catch (e: any) {
+        console.error(e)
+        if (e.response && e.response.status === 401) {
+            errorMsg.value = '아이디 또는 비밀번호가 올바르지 않습니다.'
+        } else {
+            errorMsg.value = '로그인 처리 중 오류가 발생했습니다.'
+        }
+    } finally {
+        loading.value = false
     }
 }
 
