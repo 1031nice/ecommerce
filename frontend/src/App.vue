@@ -1,5 +1,35 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
+import { ref, onMounted } from 'vue'
+
+const isLoggedIn = ref(false)
+const username = ref('')
+
+const checkLoginStatus = () => {
+  const token = localStorage.getItem('token')
+  const storedUsername = localStorage.getItem('username')
+  if (token) {
+    isLoggedIn.value = true
+    username.value = storedUsername || '사용자'
+  } else {
+    isLoggedIn.value = false
+    username.value = ''
+  }
+}
+
+const handleLogout = () => {
+  if (confirm('로그아웃 하시겠습니까?')) {
+    localStorage.removeItem('token')
+    localStorage.removeItem('username')
+    localStorage.removeItem('role')
+    isLoggedIn.value = false
+    window.location.href = '/'
+  }
+}
+
+onMounted(() => {
+  checkLoginStatus()
+})
 </script>
 
 <template>
@@ -11,7 +41,14 @@ import { RouterView } from 'vue-router'
            <router-link to="/" class="text-gray-600 hover:text-indigo-600 font-semibold transition">상품목록</router-link>
          </div>
          <div class="flex items-center space-x-6">
-           <router-link to="/login" class="text-gray-600 hover:text-indigo-600 font-medium transition">로그인</router-link>
+           <template v-if="!isLoggedIn">
+             <router-link to="/login" class="text-gray-600 hover:text-indigo-600 font-medium transition">로그인</router-link>
+           </template>
+           <template v-else>
+             <span class="text-sm text-gray-500 hidden sm:inline-block">반갑습니다, <strong>{{ username }}</strong>님</span>
+             <router-link to="/mypage" class="text-gray-600 hover:text-indigo-600 font-medium transition">마이페이지</router-link>
+             <button @click="handleLogout" class="text-gray-600 hover:text-red-600 font-medium transition">로그아웃</button>
+           </template>
          </div>
        </div>
      </nav>

@@ -50,7 +50,7 @@ const validateId = () => {
 
 // 비밀번호 유효성 검사 (8~20자, 영문+숫자 조합)
 const validatePassword = () => {
-  const pwdRegex = /^(?=.*[A-Za-z])(?=.*V)(?=.*V)[A-Za-zV@$!%*#?&]{8,20}$/
+  const pwdRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,20}$/
   if (!form.value.password) {
     validation.value.password = { valid: false, msg: '비밀번호를 입력해주세요.' }
   } else if (!pwdRegex.test(form.value.password)) {
@@ -65,6 +65,10 @@ const isPasswordMismatch = ref(false)
 watch(() => [form.value.password, form.value.passwordConfirm], ([pwd, confirm]) => {
   isPasswordMismatch.value = pwd !== confirm && confirm !== ''
 })
+
+// 실시간 유효성 검사 트리거
+watch(() => form.value.id, validateId)
+watch(() => form.value.password, validatePassword)
 
 // 주소 동기화 로직
 watch(isSameAddress, (newVal) => {
@@ -302,7 +306,11 @@ const handleRegister = async () => {
         </div>
 
         <div>
-          <button type="submit" :disabled="loading" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
+          <button 
+            type="submit" 
+            :disabled="loading || !isPhoneVerified || !validation.id.valid || !validation.password.valid || isPasswordMismatch || !form.id || !form.password" 
+            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <span v-if="loading">처리 중...</span>
             <span v-else>회원가입 완료</span>
           </button>
