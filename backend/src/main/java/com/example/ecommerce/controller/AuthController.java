@@ -29,8 +29,8 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                loginRequest.getUsername(), loginRequest.getPassword());
 
         Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
@@ -55,6 +55,18 @@ public class AuthController {
         return ResponseEntity.ok(authService.register(registerRequest));
     }
 
+    @PostMapping("/find-id")
+    public ResponseEntity<Map<String, String>> findId(@RequestBody FindIdRequest request) {
+        String username = authService.findId(request.getPhone());
+        return ResponseEntity.ok(Map.of("username", username));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> resetPassword(@RequestBody ResetPasswordRequest request) {
+        String tempPassword = authService.resetPassword(request.getUsername(), request.getPhone());
+        return ResponseEntity.ok(Map.of("tempPassword", tempPassword));
+    }
+
     @Data
     public static class LoginRequest {
         private String username;
@@ -71,5 +83,16 @@ public class AuthController {
         private String businessNumber;
         private String businessAddress;
         private String yardAddress;
+    }
+
+    @Data
+    public static class FindIdRequest {
+        private String phone;
+    }
+
+    @Data
+    public static class ResetPasswordRequest {
+        private String username;
+        private String phone;
     }
 }

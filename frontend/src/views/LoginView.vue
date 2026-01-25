@@ -9,16 +9,6 @@ const password = ref('')
 const loading = ref(false)
 const errorMsg = ref('')
 
-// Modals state
-const showFindIdModal = ref(false)
-const showResetPwdModal = ref(false)
-
-// Reset Password state
-const resetPhone = ref('')
-const resetVerifyCode = ref('')
-const isResetCodeSent = ref(false)
-const tempPassword = ref('')
-
 const handleLogin = async () => {
     loading.value = true
     errorMsg.value = ''
@@ -51,43 +41,6 @@ const handleLogin = async () => {
     } finally {
         loading.value = false
     }
-}
-
-// Find ID Logic
-const openFindId = () => {
-  showFindIdModal.value = true
-}
-const closeFindId = () => {
-  showFindIdModal.value = false
-}
-
-// Reset Password Logic
-const openResetPwd = () => {
-  showResetPwdModal.value = true
-  resetPhone.value = ''
-  resetVerifyCode.value = ''
-  isResetCodeSent.value = false
-  tempPassword.value = ''
-}
-const closeResetPwd = () => {
-  showResetPwdModal.value = false
-}
-const sendResetCode = () => {
-  if (!resetPhone.value) {
-    alert('휴대폰 번호를 입력해주세요.')
-    return
-  }
-  // Mock sending SMS
-  alert('인증번호가 발송되었습니다.')
-  isResetCodeSent.value = true
-}
-const verifyResetCode = () => {
-  if (!resetVerifyCode.value) {
-    alert('인증번호를 입력해주세요.')
-    return
-  }
-  // Mock verification logic
-  tempPassword.value = 'TempPass1234!'
 }
 </script>
 
@@ -127,71 +80,18 @@ const verifyResetCode = () => {
         </div>
 
         <div class="flex items-center justify-center space-x-4 text-sm">
-          <button type="button" @click="openFindId" class="font-medium text-gray-600 hover:text-gray-900">
+          <router-link to="/find-id" class="font-medium text-gray-600 hover:text-gray-900">
             아이디 찾기
-          </button>
+          </router-link>
           <span class="text-gray-300">|</span>
-          <button type="button" @click="openResetPwd" class="font-medium text-gray-600 hover:text-gray-900">
-            비밀번호 재설정
-          </button>
+          <router-link to="/find-password" class="font-medium text-gray-600 hover:text-gray-900">
+            비밀번호 찾기
+          </router-link>
         </div>
       </form>
     </div>
 
-    <!-- 아이디 찾기 모달 -->
-    <div v-if="showFindIdModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="closeFindId">
-      <div class="bg-white p-6 rounded shadow-lg max-w-sm w-full mx-4">
-        <h3 class="text-lg font-bold mb-4">아이디 찾기</h3>
-        <p class="text-gray-700 mb-6">
-          아이디 찾기는 고객센터로 문의해주세요.<br/>
-          <span class="font-bold text-indigo-600">02-1234-5678</span>
-        </p>
-        <div class="text-right">
-          <button @click="closeFindId" class="px-4 py-2 bg-gray-200 rounded text-gray-800 hover:bg-gray-300 text-sm">닫기</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 비밀번호 재설정 모달 -->
-    <div v-if="showResetPwdModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="closeResetPwd">
-      <div class="bg-white p-6 rounded shadow-lg max-w-sm w-full mx-4">
-        <h3 class="text-lg font-bold mb-4">비밀번호 재설정</h3>
-        
-        <div v-if="!tempPassword">
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">휴대폰 번호</label>
-            <div class="flex gap-2">
-              <input type="tel" v-model="resetPhone" class="block w-full border border-gray-300 rounded px-3 py-2 text-sm" placeholder="01012345678">
-              <button @click="sendResetCode" :disabled="isResetCodeSent" class="whitespace-nowrap px-3 py-2 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700 disabled:bg-gray-400">
-                {{ isResetCodeSent ? '재발송' : '인증요청' }}
-              </button>
-            </div>
-          </div>
-
-          <div v-if="isResetCodeSent" class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">인증번호</label>
-            <div class="flex gap-2">
-              <input type="text" v-model="resetVerifyCode" class="block w-full border border-gray-300 rounded px-3 py-2 text-sm" placeholder="인증번호 입력">
-              <button @click="verifyResetCode" class="whitespace-nowrap px-3 py-2 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700">
-                확인
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div v-else class="text-center py-4">
-          <p class="text-gray-600 mb-2">초기화된 비밀번호입니다.</p>
-          <div class="text-xl font-bold text-indigo-600 bg-gray-100 p-3 rounded mb-2">
-            {{ tempPassword }}
-          </div>
-          <p class="text-xs text-red-500">로그인 후 반드시 비밀번호를 변경해주세요.</p>
-        </div>
-
-        <div class="text-right mt-4">
-          <button @click="closeResetPwd" class="px-4 py-2 bg-gray-200 rounded text-gray-800 hover:bg-gray-300 text-sm">닫기</button>
-        </div>
-      </div>
-    </div>
-
   </div>
+
+
 </template>
