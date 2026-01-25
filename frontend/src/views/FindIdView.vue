@@ -56,8 +56,8 @@ const handleFindId = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8 bg-white p-8 shadow rounded-lg">
+  <div class="min-h-screen flex items-start justify-center bg-gray-50 pt-32 relative">
+    <div class="max-w-md w-full space-y-8 p-8 bg-white shadow rounded z-10">
       <div>
         <h2 class="text-center text-3xl font-extrabold text-gray-900">아이디 찾기</h2>
         <p class="mt-2 text-center text-sm text-gray-600">

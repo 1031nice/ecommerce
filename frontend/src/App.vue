@@ -37,7 +37,7 @@ onMounted(() => {
      <nav class="bg-white shadow">
        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
          <div class="flex items-center space-x-8">
-           <router-link to="/" class="text-2xl font-bold text-indigo-600">플랫폼</router-link>
+           <router-link to="/" class="text-2xl font-bold text-indigo-600">가설라인</router-link>
            <router-link to="/" class="text-gray-600 hover:text-indigo-600 font-semibold transition">상품목록</router-link>
          </div>
          <div class="flex items-center space-x-6">
@@ -60,10 +60,10 @@ onMounted(() => {
        <div class="container mx-auto px-4 py-8">
          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
            <div>
-             <h3 class="text-lg font-bold text-gray-900 mb-4">(주)이커머스 플랫폼</h3>
+             <h3 class="text-lg font-bold text-gray-900 mb-4">(주)가설라인</h3>
              <div class="text-sm text-gray-600 space-y-1">
                <p>대표자: 김대표 | 사업자등록번호: 123-45-67890</p>
-               <p>주소: 서울특별시 강남구 테헤란로 123, 플랫폼 타워 10층</p>
+               <p>주소: 서울특별시 강남구 테헤란로 123, 가설라인 타워 10층</p>
                <p>통신판매업신고: 제 2026-서울강남-01234호</p>
                <p>개인정보보호책임자: 이보안 (privacy@example.com)</p>
              </div>
@@ -79,7 +79,7 @@ onMounted(() => {
            </div>
          </div>
          <div class="border-t mt-8 pt-8 text-center text-xs text-gray-500">
-           <p>© 2026 (주)이커머스 플랫폼. All rights reserved.</p>
+           <p>© 2026 (주)가설라인. All rights reserved.</p>
          </div>
        </div>
      </footer>
