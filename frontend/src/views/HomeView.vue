@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 
 interface Product {
   id: string
   slug: string
-  title: string
+  name: string
   price: number
   thumbnailUrl: string
 }
@@ -12,6 +12,14 @@ interface Product {
 const products = ref<Product[]>([])
 const loading = ref(true)
 const error = ref('')
+
+// Search & Filter
+const searchQuery = ref('')
+const sortOrder = ref('latest') // latest, price-asc, price-desc
+
+// Pagination
+const currentPage = ref(1)
+const itemsPerPage = 10
 
 onMounted(async () => {
   try {
@@ -28,51 +36,237 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+const getMockAddress = (id: string) => {
+    const addresses = [
+        '서울 강남구', '경기 김포시', '충북 청주시', '경남 김해시', '부산 강서구',
+        '인천 서구', '경기 화성시', '충남 천안시', '전남 광양시', '경북 구미시'
+    ]
+    const index = id.charCodeAt(id.length - 1) % addresses.length
+    return addresses[index]
+}
+
+const getMockImage = (index: number) => {
+    // 상품 이미지 (건설 자재 관련 느낌을 내기 어렵다면 그냥 랜덤 이미지)
+    return `https://picsum.photos/400/400?random=${index + 1}`
+}
+
+// Filtered & Sorted Products
+const filteredProducts = computed(() => {
+    let result = [...products.value]
+
+    // 1. Search
+    if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase()
+        result = result.filter(p => p.name.toLowerCase().includes(query))
+    }
+
+    // 2. Sort
+    if (sortOrder.value === 'price-asc') {
+        result.sort((a, b) => a.price - b.price)
+    } else if (sortOrder.value === 'price-desc') {
+        result.sort((a, b) => b.price - a.price)
+    } 
+    // latest is default (assuming original order is latest or random)
+
+    return result
+})
+
+// Pagination Logic
+const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage))
+const paginatedProducts = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage
+    const end = start + itemsPerPage
+    return filteredProducts.value.slice(start, end)
+})
+
+const setPage = (page: number) => {
+    if (page >= 1 && page <= totalPages.value) {
+        currentPage.value = page
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+}
+
+// Category Logic
+const expandedCategory = ref<string | null>(null)
+
+const categories = [
+  {
+    name: '시스템비계 · 동바리',
+    items: ['시스템 비계', '시스템 동바리', '동바리 K-서포트', '워킹타워']
+  },
+  {
+    name: '유로폼 · 헌치',
+    items: ['유로폼 / 부속', '인코너 / 앵글', '헌치', '쇼트폼 제작']
+  },
+  {
+    name: '파이프 · 크램프',
+    items: ['강관파이프', '크램프 / 강관핀', '각파이프']
+  },
+  {
+    name: '써포트 · 웨일러',
+    items: ['써포트', '잭써포트', '스크류잭 / 앵글잭', '합벽지지대']
+  }
+]
+
+const toggleCategory = (categoryName: string) => {
+  if (expandedCategory.value === categoryName) {
+      expandedCategory.value = null
+  } else {
+      expandedCategory.value = categoryName
+  }
+}
 </script>
 
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <!-- 메인 배너나 상단 영역이 필요하다면 여기에 추가 -->
-    
-    <div v-if="loading" class="text-center py-20">
-        <p class="text-gray-500 text-lg">상품 목록을 불러오는 중입니다...</p>
-    </div>
-
-    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-lg mb-8" role="alert">
-        <p class="font-bold">오류 발생</p>
-        <p>{{ error }}</p>
-        <p class="text-sm mt-2">백엔드 서버가 실행 중인지 확인해주세요.</p>
-    </div>
-
-    <div v-else-if="products.length === 0" class="text-center py-20 bg-white rounded-lg shadow-sm">
-        <p class="text-gray-500 text-lg">등록된 상품이 없습니다.</p>
-    </div>
-
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      <div v-for="product in products" :key="product.id" class="group bg-white border border-gray-100 rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer">
-        <router-link :to="`/products/${product.slug}`" class="block">
-          <!-- 썸네일 영역 -->
-          <div class="aspect-w-1 aspect-h-1 w-full bg-gray-200 overflow-hidden relative" style="padding-top: 100%;">
-            <img 
-              v-if="product.thumbnailUrl" 
-              :src="product.thumbnailUrl" 
-              alt="상품 이미지" 
-              class="absolute top-0 left-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+<div class="container mx-auto px-4 py-8 flex items-start gap-8">
+    <!-- 사이드바: 카테고리 -->
+    <aside class="w-1/4 hidden md:block sticky top-24">
+      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 px-2 border-b border-gray-100 pb-2">카테고리</h2>
+        <ul class="space-y-4">
+          <li>
+            <a href="#" class="block px-3 py-2 text-indigo-600 font-bold bg-indigo-50 rounded-md whitespace-nowrap">전체보기</a>
+          </li>
+          
+          <li v-for="category in categories" :key="category.name">
+            <button 
+              @click="toggleCategory(category.name)"
+              class="w-full text-left flex justify-between items-center block px-3 py-1 text-sm font-bold text-gray-800 border-b border-gray-100 mb-1 whitespace-nowrap hover:text-indigo-600 focus:outline-none"
             >
-            <div v-else class="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
-              <span class="text-sm">이미지 없음</span>
+              {{ category.name }}
+              <svg 
+                class="w-4 h-4 transform transition-transform duration-200"
+                :class="expandedCategory === category.name ? 'rotate-180' : ''"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <transition
+              enter-active-class="transition-all duration-300 ease-out"
+              leave-active-class="transition-all duration-200 ease-in"
+              enter-from-class="opacity-0 max-h-0"
+              enter-to-class="opacity-100 max-h-40"
+              leave-from-class="opacity-100 max-h-40"
+              leave-to-class="opacity-0 max-h-0"
+            >
+              <ul v-show="expandedCategory === category.name" class="ml-2 space-y-1 overflow-hidden">
+                <li v-for="item in category.items" :key="item">
+                  <a href="#" class="block px-3 py-1.5 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-md whitespace-nowrap">
+                    {{ item }}
+                  </a>
+                </li>
+              </ul>
+            </transition>
+          </li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="w-full md:w-3/4">
+      
+      <!-- 검색 및 필터 바 -->
+      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div class="relative w-full sm:w-96">
+              <input 
+                type="text" 
+                v-model="searchQuery" 
+                placeholder="상품명 검색..." 
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              >
+              <div class="absolute left-3 top-2.5 text-gray-400">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              </div>
+          </div>
+          <div class="flex items-center gap-2">
+              <select v-model="sortOrder" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                  <option value="latest">최신순</option>
+                  <option value="price-asc">낮은 가격순</option>
+                  <option value="price-desc">높은 가격순</option>
+              </select>
+          </div>
+      </div>
+
+      <!-- 상품 목록 -->
+      <div v-if="loading" class="text-center py-20">
+          <p class="text-gray-500 text-lg">상품 목록을 불러오는 중입니다...</p>
+      </div>
+
+      <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-lg mb-8" role="alert">
+          <p class="font-bold">오류 발생</p>
+          <p>{{ error }}</p>
+          <p class="text-sm mt-2">백엔드 서버가 실행 중인지 확인해주세요.</p>
+      </div>
+
+      <div v-else-if="products.length === 0" class="text-center py-20 bg-white rounded-lg shadow-sm w-full">
+          <p class="text-gray-500 text-lg">등록된 상품이 없습니다.</p>
+      </div>
+
+      <div v-else>
+          <div class="grid grid-cols-2 gap-6 min-h-[600px] content-start">
+            <div v-for="(product, index) in paginatedProducts" :key="product.id" class="group bg-white border border-gray-100 rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer h-full flex flex-col">
+              <router-link :to="`/products/${product.slug}`" class="block flex-1">
+                <!-- 썸네일 영역 -->
+                <div class="aspect-w-1 aspect-h-1 w-full bg-gray-200 overflow-hidden relative" style="padding-top: 100%;">
+                  <img 
+                    :src="getMockImage(index)" 
+                    alt="상품 이미지" 
+                    class="absolute top-0 left-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                  >
+                </div>
+                
+                <!-- 상품 정보 영역 -->
+                <div class="p-4 flex flex-col flex-1">
+                  <!-- 1. 상품명 (제일 위) -->
+                  <h3 class="text-lg font-bold text-gray-900 mb-1 line-clamp-2">{{ product.name }}</h3>
+
+                  <!-- 2. 가격 (중간) -->
+                  <div class="mb-2">
+                      <p class="text-xl font-bold text-indigo-600">
+                        {{ product.price.toLocaleString() }}원
+                      </p>
+                  </div>
+                  
+                  <!-- 3. 주소 (마지막) -->
+                  <div class="mt-auto flex items-center text-sm text-gray-500">
+                      <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                      {{ getMockAddress(product.id) }}
+                  </div>
+                </div>
+              </router-link>
             </div>
           </div>
-          
-          <!-- 상품 정보 영역 -->
-          <div class="p-4">
-            <h3 class="text-md font-medium text-gray-900 truncate mb-1">{{ product.title }}</h3>
-            <p class="text-lg font-bold text-gray-900">
-              {{ product.price.toLocaleString() }}원
-            </p>
+
+          <!-- 페이지네이션 -->
+          <div class="mt-8 flex justify-center space-x-2" v-if="totalPages > 1">
+              <button 
+                  @click="setPage(currentPage - 1)" 
+                  :disabled="currentPage === 1"
+                  class="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                  &lt;
+              </button>
+              
+              <button 
+                  v-for="page in totalPages" 
+                  :key="page"
+                  @click="setPage(page)"
+                  :class="['px-3 py-1 border rounded', currentPage === page ? 'bg-indigo-600 text-white border-indigo-600' : 'hover:bg-gray-50']"
+              >
+                  {{ page }}
+              </button>
+
+              <button 
+                  @click="setPage(currentPage + 1)" 
+                  :disabled="currentPage === totalPages"
+                  class="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                  &gt;
+              </button>
           </div>
-        </router-link>
       </div>
-    </div>
-  </div>
+    </main>
+</div>
 </template>
