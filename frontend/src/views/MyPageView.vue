@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import axios from 'axios'
+import { useRouter } from 'vue-router'
 
 const API_BASE_URL = 'http://localhost:8080' // Dev environment
+const router = useRouter()
 
 // 상태 관리
 const form = ref({
@@ -26,17 +28,42 @@ const errorMsg = ref('')
 const successMsg = ref('')
 
 // 초기 데이터 로딩 (가정)
+// 초기 데이터 로딩
 onMounted(async () => {
-    // 실제로는 API로 유저 정보를 불러와야 함
-    // 예: const res = await axios.get(`${API_BASE_URL}/api/users/me`)
-    // form.value = ...res.data
-    
-    // 더미 데이터
-    form.value.id = 'testuser1234'
-    form.value.email = 'test@example.com'
-    form.value.phoneNumber = '01012345678'
-    form.value.companyName = 'My Company'
-    form.value.businessAddress = '서울시 강남구 테헤란로'
+    try {
+        const token = localStorage.getItem('token')
+        if (!token) {
+            alert('로그인이 필요합니다.')
+            router.push('/login')
+            return
+        }
+        
+        const res = await axios.get(`${API_BASE_URL}/api/users/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        const data = res.data
+        
+        form.value.id = data.username
+        form.value.email = data.email || ''
+        form.value.phoneNumber = data.phone || ''
+        form.value.companyName = data.companyName || ''
+        form.value.businessNumber = data.businessNumber || ''
+        form.value.businessAddress = data.businessAddress || ''
+        form.value.yardAddress = data.yardAddress || ''
+        
+        if (data.businessAddress && data.businessAddress === data.yardAddress) {
+            isSameAddress.value = true
+        }
+
+    } catch (e) {
+        console.error(e)
+        // 토큰이 만료되었거나 오류 발생 시
+        if (axios.isAxiosError(e) && e.response?.status === 403) {
+             alert('로그인 세션이 만료되었습니다.')
+             localStorage.removeItem('token')
+             router.push('/login')
+        }
+    }
 })
 
 // 유효성 검사 규칙
@@ -140,7 +167,8 @@ const handleUpdate = async () => {
   successMsg.value = ''
 
   try {
-      // API 호출 (Spring Boot) - PUT or PATCH
+      const token = localStorage.getItem('token')
+      // API 호출 (Spring Boot) - PUT
       await axios.put(`${API_BASE_URL}/api/users/me`, {
         password: form.value.password || undefined, // 변경 시에만 전송
         phone: form.value.phoneNumber,
@@ -149,20 +177,33 @@ const handleUpdate = async () => {
         businessNumber: form.value.businessNumber,
         businessAddress: form.value.businessAddress,
         yardAddress: form.value.yardAddress
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       })
 
       successMsg.value = '정보가 성공적으로 수정되었습니다.'
       
-      // 비밀번호 변경 시 로그아웃 처리 등이 필요할 수 있음
+      // 비밀번호가 변경되었으면 로그아웃 처리
+      if (isChangingPassword.value && form.value.password) {
+         alert('비밀번호가 변경되었습니다. 다시 로그인해주세요.')
+         localStorage.removeItem('token')
+         localStorage.removeItem('username')
+         localStorage.removeItem('role')
+         router.push('/login')
+         return
+      }
+      
+      togglePasswordChange(false)
+      
+      // 에러 메시지 초기화
+      errorMsg.value = ''
 
   } catch (e: any) {
     console.error(e)
     if (e.response && e.response.data && e.response.data.message) {
         errorMsg.value = e.response.data.message
     } else {
-        // Mock success actually, since backend might not exist yet
-        // errorMsg.value = '정보 수정 중 오류가 발생했습니다.'
-        successMsg.value = '정보 수정 요청을 보냈습니다. (백엔드 연동 필요)'
+        errorMsg.value = '정보 수정 중 오류가 발생했습니다.'
     }
   } finally {
     loading.value = false
