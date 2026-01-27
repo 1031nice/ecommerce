@@ -6,12 +6,12 @@ import { getCartSeller, getCartItemCount, addToCart as addToCartUtil, clearCart,
 interface Product {
   id: string
   slug: string
-  title: string
-  price: number
-  category: string
-  thumbnailUrl: string
+  itemName: string
+  unitPrice: number
+  categoryName?: string
+  imageUrls?: string[]
   description?: string
-  seller?: string
+  sellerName?: string
 }
 
 const route = useRoute()
@@ -25,16 +25,20 @@ const currentCartSeller = ref<string | null>(null)
 const currentCartItemCount = ref(0)
 const hasCartConflict = computed(() => {
     if (!product.value || !currentCartSeller.value) return false
-    return currentCartSeller.value !== product.value.seller
+    return currentCartSeller.value !== product.value.sellerName
 })
 
 // Mock data helpers
 const mockImages = computed(() => {
     if (!product.value) return []
+    // Use backend images if available, otherwise generate mock images
+    if (product.value.imageUrls && product.value.imageUrls.length > 0) {
+        return product.value.imageUrls
+    }
     // Generate 4 stable random images based on product ID logic
     const baseId = product.value.id.charCodeAt(product.value.id.length - 1)
     return [
-        product.value.thumbnailUrl || `https://picsum.photos/600/600?random=${baseId}`,
+        `https://picsum.photos/600/600?random=${baseId}`,
         `https://picsum.photos/600/600?random=${baseId + 1}`,
         `https://picsum.photos/600/600?random=${baseId + 2}`,
         `https://picsum.photos/600/600?random=${baseId + 3}`,
@@ -88,11 +92,14 @@ onMounted(async () => {
         if (res.ok) {
             const data = await res.json()
             product.value = {
-                ...data,
-                // Ensure fields exist if backend is partial
-                title: data.name || data.title, 
+                id: data.id,
+                slug: data.id,
+                itemName: data.itemName || '상품명 없음',
+                unitPrice: data.unitPrice || 0,
+                categoryName: data.categoryName,
+                imageUrls: data.imageUrls || [],
                 description: data.description || "본 상품은 건설 현장에서 검증된 최고급 자재입니다. 내구성이 뛰어나며 안전 인증을 통과하였습니다. 대량 구매 시 추가 할인이 가능하오니 판매자에게 문의 바랍니다. \n\n[상품 상세 특징]\n- KC 인증 완료\n- 고강도 강철 사용\n- 부식 방지 코팅 처리",
-                seller: data.seller || getSellerForProduct(data.id),
+                sellerName: data.sellerName || getSellerForProduct(data.id),
             }
         } else {
             throw new Error('Product not found')
@@ -104,12 +111,12 @@ onMounted(async () => {
         product.value = {
             id: mockId,
             slug: slug as string,
-            title: '프리미엄 시스템 비계 (예시 상품)',
-            price: 15000,
-            category: '시스템비계 · 동바리',
-            thumbnailUrl: `https://picsum.photos/600/600?random=1`,
+            itemName: '프리미엄 시스템 비계 (예시 상품)',
+            unitPrice: 15000,
+            categoryName: '시스템비계 · 동바리',
+            imageUrls: [],
             description: "이 화면은 백엔드 데이터 연동 실패 시 보여지는 예시 데이터입니다.\n\n강력한 내구성과 안전성을 자랑하는 프리미엄 시스템 비계입니다. 현장에서 가장 많이 사용하는 규격으로, 호환성이 뛰어납니다.",
-            seller: getSellerForProduct(mockId),
+            sellerName: getSellerForProduct(mockId),
         }
     }
     // ensure index is valid
@@ -123,7 +130,7 @@ const decreaseQty = () => { if (quantity.value > 1) quantity.value-- }
 const increaseQty = () => { quantity.value++ }
 
 const totalPrice = computed(() => {
-    return (product.value?.price || 0) * quantity.value
+    return (product.value?.unitPrice || 0) * quantity.value
 })
 
 // Cart Actions
@@ -132,17 +139,17 @@ const addToCart = () => {
     
     const cartItem: CartItem = {
         productId: product.value.id,
-        productName: product.value.title,
+        productName: product.value.itemName,
         productSlug: product.value.slug,
-        seller: product.value.seller || '',
-        price: product.value.price,
+        seller: product.value.sellerName || '',
+        price: product.value.unitPrice,
         quantity: quantity.value,
-        thumbnailUrl: product.value.thumbnailUrl
+        thumbnailUrl: product.value.imageUrls && product.value.imageUrls.length > 0 ? product.value.imageUrls[0] : ''
     }
     
     addToCartUtil(cartItem)
     checkCartStatus()
-    alert(`${product.value.title} ${quantity.value}개를 장바구니에 담았습니다.`)
+    alert(`${product.value.itemName} ${quantity.value}개를 장바구니에 담았습니다.`)
 }
 
 const clearAndAddToCart = () => {
@@ -173,9 +180,9 @@ const buyNow = () => {
         <nav class="text-sm text-gray-500 mb-6 flex items-center gap-2">
             <router-link to="/" class="hover:text-indigo-600">홈</router-link>
             <span>&gt;</span>
-            <span class="hover:text-indigo-600 cursor-pointer">{{ product.category }}</span>
+            <span class="hover:text-indigo-600 cursor-pointer">{{ product.categoryName }}</span>
             <span>&gt;</span>
-            <span class="text-gray-900 font-medium">{{ product.title }}</span>
+            <span class="text-gray-900 font-medium">{{ product.itemName }}</span>
         </nav>
 
         <!-- Top Section: Image & Info -->
@@ -228,13 +235,13 @@ const buyNow = () => {
             <div class="lg:col-span-2 w-full flex flex-col h-full">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col">
                     <div class="flex justify-between items-start mb-2">
-                        <span class="text-indigo-600 font-bold text-sm tracking-wide">{{ product.seller }}</span>
+                        <span class="text-indigo-600 font-bold text-sm tracking-wide">{{ product.sellerName }}</span>
                     </div>
                     
-                    <h1 class="text-2xl font-bold text-gray-900 mb-4 leading-tight">{{ product.title }}</h1>
+                    <h1 class="text-2xl font-bold text-gray-900 mb-4 leading-tight">{{ product.itemName }}</h1>
                     
                     <div class="flex items-end gap-2 mb-6 border-b border-gray-100 pb-6">
-                        <span class="text-3xl font-bold text-gray-900">{{ product.price.toLocaleString() }}</span>
+                        <span class="text-3xl font-bold text-gray-900">{{ product.unitPrice.toLocaleString() }}</span>
                         <span class="text-lg text-gray-400 mb-1">원</span>
                     </div>
 
@@ -318,7 +325,7 @@ const buyNow = () => {
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-16">
             <div class="flex justify-between items-center mb-6 border-b pb-4">
                 <h3 class="text-xl font-bold text-gray-900">이 판매자의 다른 상품</h3>
-                 <button @click="$router.push({ path: '/', query: { seller: product?.seller } })" class="text-sm text-indigo-600 font-bold hover:bg-indigo-50 px-3 py-1.5 rounded transition">
+                 <button @click="$router.push({ path: '/', query: { seller: product?.sellerName } })" class="text-sm text-indigo-600 font-bold hover:bg-indigo-50 px-3 py-1.5 rounded transition">
                      이 판매자의 상품 모아보기 &rarr;
                  </button>
             </div>

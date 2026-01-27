@@ -5,10 +5,10 @@ import { useRoute, useRouter } from 'vue-router'
 interface Product {
   id: string
   slug: string
-  name: string
-  price: number
-  thumbnailUrl: string
-  seller?: string
+  itemName: string  // Backend DTO uses itemName
+  unitPrice: number  // Backend DTO uses unitPrice (BigDecimal)
+  imageUrls?: string[]  // Backend DTO uses imageUrls array
+  sellerName?: string  // Backend DTO uses sellerName
 } 
 
 const route = useRoute()
@@ -41,12 +41,16 @@ onMounted(async () => {
     const res = await fetch('/api/products')
     if (res.ok) {
         const data = await res.json()
-        // Add mock seller to data for filtering demo using same logic as detail view
+        // Map backend ProductDTO to frontend Product interface
         products.value = data.map((p: any) => ({
-            ...p,
-            slug: p.slug || p.id, // Fallback to id if no slug
-            seller: p.seller || getSellerForProduct(p.id)
+            id: p.id,
+            slug: p.id, // Use id as slug for now
+            itemName: p.itemName || '상품명 없음',
+            unitPrice: p.unitPrice || 0,
+            imageUrls: p.imageUrls || [],
+            sellerName: p.sellerName || getSellerForProduct(p.id)
         }))
+        console.log('Loaded products:', products.value.length)
     } else {
         error.value = `상품을 불러오는데 실패했습니다: ${res.statusText}`
     }
@@ -125,20 +129,20 @@ const filteredProducts = computed(() => {
     // 0. Seller Filter (Multiple)
     if (selectedSellers.value.length > 0) {
         // Mock logic: exact match
-        result = result.filter(p => p.seller && selectedSellers.value.includes(p.seller))
+        result = result.filter(p => p.sellerName && selectedSellers.value.includes(p.sellerName))
     }
 
     // 1. Search
     if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase()
-        result = result.filter(p => p.name.toLowerCase().includes(query))
+        result = result.filter(p => p.itemName.toLowerCase().includes(query))
     }
 
     // 2. Sort
     if (sortOrder.value === 'price-asc') {
-        result.sort((a, b) => a.price - b.price)
+        result.sort((a, b) => a.unitPrice - b.unitPrice)
     } else if (sortOrder.value === 'price-desc') {
-        result.sort((a, b) => b.price - a.price)
+        result.sort((a, b) => b.unitPrice - a.unitPrice)
     } 
 
     return result
@@ -300,7 +304,7 @@ const toggleCategory = (categoryName: string) => {
                 <!-- 썸네일 영역 -->
                 <div class="aspect-w-1 aspect-h-1 w-full bg-gray-200 overflow-hidden relative" style="padding-top: 100%;">
                   <img 
-                    :src="getMockImage(index)" 
+                    :src="product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : getMockImage(index)" 
                     alt="상품 이미지" 
                     class="absolute top-0 left-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                   >
@@ -309,12 +313,12 @@ const toggleCategory = (categoryName: string) => {
                 <!-- 상품 정보 영역 -->
                 <div class="p-4 flex flex-col flex-1">
                   <!-- 1. 상품명 (제일 위) -->
-                  <h3 class="text-lg font-bold text-gray-900 mb-1 line-clamp-2">{{ product.name }}</h3>
+                  <h3 class="text-lg font-bold text-gray-900 mb-1 line-clamp-2">{{ product.itemName }}</h3>
 
                   <!-- 2. 가격 (중간) -->
                   <div class="mb-3">
                       <p class="text-xl font-bold text-indigo-600">
-                        {{ product.price.toLocaleString() }}원
+                        {{ product.unitPrice.toLocaleString() }}원
                       </p>
                   </div>
                   
@@ -328,10 +332,10 @@ const toggleCategory = (categoryName: string) => {
                   <div class="mt-auto pt-3 border-t border-gray-100">
                       <div class="flex items-center text-sm text-gray-600 mb-2">
                           <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                          <span class="font-medium">{{ product.seller }}</span>
+                          <span class="font-medium">{{ product.sellerName }}</span>
                       </div>
                       <button 
-                          @click.prevent="$router.push({ path: '/', query: { seller: product.seller } })"
+                          @click.prevent="$router.push({ path: '/', query: { seller: product.sellerName } })"
                           class="w-full text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 py-2 px-3 rounded-md transition-colors flex items-center justify-center gap-1"
                       >
                           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
