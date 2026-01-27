@@ -267,69 +267,6 @@ COMMENT ON COLUMN order_images.image_type IS 'loading: 상차 사진, delivery: 
 CREATE INDEX idx_order_images_order_id ON order_images(order_id);
 
 -- ============================================================
--- 배송업체 테이블
--- ============================================================
-
-CREATE TABLE carriers (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(100) NOT NULL,
-    phone VARCHAR(20) NOT NULL,
-    truck_type VARCHAR(20),
-    truck_tonnage VARCHAR(20),
-    is_active BOOLEAN NOT NULL DEFAULT true,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-COMMENT ON TABLE carriers IS '배송업체 (외부 협력 차주)';
-
-CREATE INDEX idx_carriers_is_active ON carriers(is_active);
-
--- ============================================================
--- 정산 테이블
--- ============================================================
-
-CREATE TABLE settlements (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    order_id UUID NOT NULL REFERENCES orders(id),
-    recipient_id UUID NOT NULL REFERENCES users(id),
-    recipient_type VARCHAR(20) NOT NULL CHECK (recipient_type IN ('seller', 'carrier')),
-    amount DECIMAL(15, 2) NOT NULL CHECK (amount >= 0),
-    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'completed')),
-    settled_at TIMESTAMPTZ,
-    memo TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-COMMENT ON TABLE settlements IS '정산 테이블';
-COMMENT ON COLUMN settlements.recipient_type IS 'seller: 판매자, carrier: 배송업체';
-COMMENT ON COLUMN settlements.status IS 'pending: 정산대기, completed: 정산완료';
-
-CREATE INDEX idx_settlements_order_id ON settlements(order_id);
-CREATE INDEX idx_settlements_recipient_id ON settlements(recipient_id);
-CREATE INDEX idx_settlements_status ON settlements(status);
-
--- ============================================================
--- 세금계산서/거래명세서 테이블
--- ============================================================
-
-CREATE TABLE invoices (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    order_id UUID NOT NULL REFERENCES orders(id),
-    invoice_type VARCHAR(20) NOT NULL CHECK (invoice_type IN ('tax', 'statement')),
-    document_url TEXT,
-    issued_at TIMESTAMPTZ,
-    issued_by UUID REFERENCES users(id),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-COMMENT ON TABLE invoices IS '세금계산서 및 거래명세서';
-COMMENT ON COLUMN invoices.invoice_type IS 'tax: 세금계산서, statement: 거래명세서';
-
-CREATE INDEX idx_invoices_order_id ON invoices(order_id);
-CREATE INDEX idx_invoices_invoice_type ON invoices(invoice_type);
-
--- ============================================================
 -- 알림 테이블
 -- ============================================================
 
@@ -381,7 +318,4 @@ CREATE TRIGGER update_cart_items_updated_at BEFORE UPDATE ON cart_items
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_carriers_updated_at BEFORE UPDATE ON carriers
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

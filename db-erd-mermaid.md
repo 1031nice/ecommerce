@@ -21,8 +21,6 @@ erDiagram
     orders ||--o{ invoices : "requires"
     orders ||--o{ notifications : "triggers"
     
-    carriers ||--o{ settlements : "receives_payment"
-
     users {
         uuid id PK
         varchar username "Login ID (unique)"
@@ -163,28 +161,6 @@ erDiagram
         timestamptz created_at
     }
 
-    settlements {
-        uuid id PK
-        uuid order_id FK
-        uuid recipient_id FK "판매자 or 배송업체"
-        varchar recipient_type "seller/carrier"
-        decimal amount
-        varchar status "pending/completed"
-        timestamptz settled_at
-        text memo
-        timestamptz created_at
-    }
-
-    invoices {
-        uuid id PK
-        uuid order_id FK
-        varchar invoice_type "tax/statement"
-        text document_url
-        timestamptz issued_at
-        uuid issued_by FK "references users(id)"
-        timestamptz created_at
-    }
-
     notifications {
         uuid id PK
         uuid user_id FK
@@ -195,15 +171,4 @@ erDiagram
         timestamptz sent_at
         varchar status "pending/sent/failed"
         timestamptz created_at
-    }
-
-    carriers {
-        uuid id PK
-        varchar name
-        varchar phone
-        varchar truck_type
-        varchar truck_tonnage
-        boolean is_active
-        timestamptz created_at
-        timestamptz updated_at
     }
