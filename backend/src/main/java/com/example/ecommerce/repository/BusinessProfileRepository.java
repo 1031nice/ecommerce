@@ -8,5 +8,7 @@ import java.util.UUID;
 public interface BusinessProfileRepository extends JpaRepository<BusinessProfile, UUID> {
     List<BusinessProfile> findByUserId(UUID userId);
 
+    List<BusinessProfile> findByUserIdIn(List<UUID> userIds);
+
     boolean existsByBusinessNumber(String businessNumber);
 }

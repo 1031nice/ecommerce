@@ -26,51 +26,68 @@ public class ProductService {
         private final com.example.ecommerce.mapper.ProductMapper productMapper;
 
         public List<ProductDTO> getAllProducts() {
-                return productRepository.findAll().stream()
-                                .filter(Product::isDisplayed) // 전시 가능 상품만
-                                .map(this::convertToDTO)
+                List<Product> products = productRepository.findAll().stream()
+                                .filter(Product::isDisplayed)
                                 .collect(Collectors.toList());
+                return toProductDTOs(products);
         }
 
-        // 필요하다면 검색 로직 추가 (Category ID, etc)
         public List<ProductDTO> getProductsBySeller(UUID sellerId) {
-                return productRepository.findBySellerId(sellerId).stream()
-                                .map(this::convertToDTO)
-                                .collect(Collectors.toList());
+                List<Product> products = productRepository.findBySellerId(sellerId);
+                return toProductDTOs(products);
         }
 
         public List<ProductDTO> searchProducts(UUID categoryId, String itemCondition, String itemName) {
-                // 복잡한 동적 쿼리는 QueryDSL이 좋지만, 일단 Stream으로 간단 구현
-                // 데이터가 많아지면 성능 문제 발생 가능 -> 추후 Repository @Query로 변경 권장
-                return productRepository.findAll().stream()
-                                .filter(Product::isDisplayed) // 전시 중인 것만
+                List<Product> products = productRepository.findAll().stream()
+                                .filter(Product::isDisplayed)
                                 .filter(p -> categoryId == null || (p.getCategory() != null
                                                 && p.getCategory().getId().equals(categoryId)))
                                 .filter(p -> itemCondition == null || p.getItemCondition().equals(itemCondition))
                                 .filter(p -> itemName == null || p.getItemName().contains(itemName))
-                                .map(this::convertToDTO)
                                 .collect(Collectors.toList());
+                return toProductDTOs(products);
         }
 
         public ProductDTO getProductById(UUID id) {
                 Product product = productRepository.findById(id)
                                 .orElseThrow(() -> new RuntimeException("Product not found"));
-                return convertToDTO(product);
+                return toProductDTOs(List.of(product)).get(0);
         }
 
-        private ProductDTO convertToDTO(Product product) {
-                List<String> imageUrls = productImageRepository.findByProductId(product.getId()).stream()
-                                .sorted(Comparator.comparingInt(ProductImage::getDisplayOrder))
-                                .map(ProductImage::getImageUrl)
+        private List<ProductDTO> toProductDTOs(List<Product> products) {
+                if (products.isEmpty())
+                        return java.util.Collections.emptyList();
+
+                List<UUID> productIds = products.stream().map(Product::getId).collect(Collectors.toList());
+                List<UUID> sellerIds = products.stream().map(p -> p.getSeller().getId()).distinct()
                                 .collect(Collectors.toList());
 
-                // 판매자 상호명 조회 (Main Profile)
-                String sellerName = businessProfileRepository.findByUserId(product.getSeller().getId()).stream()
-                                .filter(BusinessProfile::isMain)
-                                .findFirst()
-                                .map(BusinessProfile::getBusinessName)
-                                .orElse(product.getSeller().getName()); // 없으면 유저 이름
+                // 1. 이미지 일괄 조회
+                java.util.Map<UUID, List<ProductImage>> imageMap = productImageRepository.findByProductIdIn(productIds)
+                                .stream()
+                                .collect(Collectors.groupingBy(img -> img.getProduct().getId()));
 
-                return productMapper.toDTO(product, sellerName, imageUrls);
+                // 2. 판매자 프로필 일괄 조회
+                java.util.Map<UUID, BusinessProfile> profileMap = businessProfileRepository.findByUserIdIn(sellerIds)
+                                .stream()
+                                .filter(BusinessProfile::isMain)
+                                .collect(Collectors.toMap(
+                                                bp -> bp.getUser().getId(),
+                                                bp -> bp,
+                                                (p1, p2) -> p1));
+
+                // 3. 매핑
+                return products.stream().map(p -> {
+                        List<String> images = imageMap.getOrDefault(p.getId(), java.util.Collections.emptyList())
+                                        .stream()
+                                        .sorted(Comparator.comparingInt(ProductImage::getDisplayOrder))
+                                        .map(ProductImage::getImageUrl)
+                                        .collect(Collectors.toList());
+
+                        BusinessProfile profile = profileMap.get(p.getSeller().getId());
+                        String sellerName = (profile != null) ? profile.getBusinessName() : p.getSeller().getName();
+
+                        return productMapper.toDTO(p, sellerName, images);
+                }).collect(Collectors.toList());
         }
 }

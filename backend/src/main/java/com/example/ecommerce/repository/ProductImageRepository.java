@@ -7,4 +7,6 @@ import java.util.UUID;
 
 public interface ProductImageRepository extends JpaRepository<ProductImage, UUID> {
     List<ProductImage> findByProductId(UUID productId);
+
+    List<ProductImage> findByProductIdIn(List<UUID> productIds);
 }
